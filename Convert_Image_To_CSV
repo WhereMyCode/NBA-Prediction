@@ -1,0 +1,33 @@
+from PIL import Image
+import pytesseract
+import pandas as pd
+import csv
+
+# Make sure to set the path to the tesseract executable if it's not in your PATH
+# pytesseract.pytesseract.tesseract_cmd = r'<full_path_to_your_tesseract_executable>'
+
+def image_to_csv(image_path, csv_output_path):
+    # Open the image file
+    with Image.open(image_path) as img:
+        # Use pytesseract to extract text from the image
+        text_data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+    
+    # Extract columns and individual cell texts
+    columns = text_data['text'][11:22]  # This is based on the observation of the data structure; adjust as needed
+    cell_texts = text_data['text'][22:]  # Adjust index based on where actual data starts
+
+    # Split the cell texts into rows based on the number of columns
+    num_columns = len(columns)
+    rows = [cell_texts[i:i + num_columns] for i in range(0, len(cell_texts), num_columns)]
+    
+    # Filter out empty rows
+    rows = [row for row in rows if any(cell.strip() for cell in row)]
+    
+    # Write to CSV
+    with open(csv_output_path, 'w', newline='', encoding='utf-8') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(columns)
+        csvwriter.writerows(rows)
+
+# Replace 'input.jpg' with the path to your image file and 'output.csv' with the desired CSV output file path
+image_to_csv('input.jpg', 'output.csv')
